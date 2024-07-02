@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sofia Neighborhood Mapper</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map { height: 600px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h1>Sofia Neighborhood Mapper</h1>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([42.6977, 23.3219], 12);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Function to get user's geolocation
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError, { enableHighAccuracy: true });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        // Function to show the user's position on the map
+        function showPosition(position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+            var marker = L.marker([lat, lon]).addTo(map);
+            map.setView([lat, lon], 14);
+
+            // Call the reverse geocoding function
+            reverseGeocode(lat, lon);
+        }
+
+        // Function to handle geolocation errors
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("An unknown error occurred.");
+                    break;
+            }
+        }
+
+        // Function to reverse geocode using the Flask server
+        function reverseGeocode(lat, lon) {
+            var url = `/reverse-geocode?lat=${lat}&lon=${lon}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.neighborhood) {
+                        alert("You are in the neighborhood of " + data.neighborhood);
+                    } else {
+                        alert("Neighborhood not found.");
+                    }
+                })
+                .catch(error => console.log('Error:', error));
+        }
+
+        // Get the user's location when the page loads
+        getLocation();
+    </script>
+</body>
+</html>
